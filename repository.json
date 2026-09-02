@@ -5,7 +5,7 @@
     "schemaVersion": 1
   },
   "name": "ATLAS Automation Exporter / Editor Plugin Repository",
-  "version": "3",
+  "version": "4",
   "homepage": "https://github.com/rockbaer2007/atlas-automation-exporter-editor-plugin",
   "installPage": "https://rockbaer2007.github.io/atlas-automation-exporter-editor-plugin/install.html",
   "maintainer": "UGSo Software",
@@ -21,7 +21,7 @@
         "de": "ATLAS Automation Exporter / Editor",
         "en": "ATLAS Automation Exporter / Editor"
       },
-      "version": "0.1.2",
+      "version": "0.1.3",
       "description": "Analyze Home Assistant automations, export selected entries and continue editing them through File Studio.",
       "descriptionI18n": {
         "de": "Home-Assistant-Automationen analysieren, ausgewaehlte Eintraege exportieren und ueber File Studio weiter bearbeiten.",
@@ -32,7 +32,7 @@
       "icon": "./plugins/automation-exporter-editor/icon.svg",
       "preview": "./plugins/automation-exporter-editor/preview.svg",
       "entry": "/plugin-assets/automation-exporter-editor/index.html",
-      "package": "./plugins/automation-exporter-editor/atlas-plugin-automation-exporter-editor-0.1.2.atlas-plugin.json",
+      "package": "./plugins/automation-exporter-editor/atlas-plugin-automation-exporter-editor-0.1.3.atlas-plugin.json",
       "manifest": "./plugins/automation-exporter-editor/atlas-plugin.json",
       "capabilities": [
         "homeassistant.automation-analysis",
