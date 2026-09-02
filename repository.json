@@ -1,0 +1,51 @@
+{
+  "kind": "atlas.plugin.repository",
+  "atlas": {
+    "type": "plugin-repository",
+    "schemaVersion": 1
+  },
+  "name": "ATLAS Automation Exporter / Editor Plugin Repository",
+  "version": "1",
+  "homepage": "https://github.com/rockbaer2007/atlas-automation-exporter-editor-plugin",
+  "installPage": "https://rockbaer2007.github.io/atlas-automation-exporter-editor-plugin/install.html",
+  "maintainer": "UGSo Software",
+  "plugins": [
+    {
+      "id": "atlas.plugin.automation-exporter-editor",
+      "atlas": {
+        "type": "plugin",
+        "schemaVersion": 1
+      },
+      "name": "ATLAS Automation Exporter / Editor",
+      "nameI18n": {
+        "de": "ATLAS Automation Exporter / Editor",
+        "en": "ATLAS Automation Exporter / Editor"
+      },
+      "version": "0.1.0",
+      "description": "Analyze Home Assistant automations, export selected entries and continue editing them through File Studio.",
+      "descriptionI18n": {
+        "de": "Home-Assistant-Automationen analysieren, ausgewaehlte Eintraege exportieren und ueber File Studio weiter bearbeiten.",
+        "en": "Analyze Home Assistant automations, export selected entries and continue editing them through File Studio."
+      },
+      "homepage": "https://github.com/rockbaer2007/atlas-automation-exporter-editor-plugin",
+      "installPage": "https://rockbaer2007.github.io/atlas-automation-exporter-editor-plugin/install.html",
+      "icon": "./plugins/automation-exporter-editor/icon.svg",
+      "preview": "./plugins/automation-exporter-editor/preview.svg",
+      "entry": "/plugin-assets/automation-exporter-editor/index.html",
+      "package": "./plugins/automation-exporter-editor/atlas-plugin-automation-exporter-editor.atlas-plugin.json",
+      "manifest": "./plugins/automation-exporter-editor/atlas-plugin.json",
+      "capabilities": [
+        "homeassistant.automation-analysis",
+        "homeassistant.automation-export",
+        "atlas.yaml-upload",
+        "atlas.file-studio-handoff",
+        "atlas.scoped-filesystem"
+      ],
+      "compatibility": {
+        "atlas": ">=0.1.120",
+        "host": "administration-local",
+        "homeAssistant": ">=2026.8"
+      }
+    }
+  ]
+}
