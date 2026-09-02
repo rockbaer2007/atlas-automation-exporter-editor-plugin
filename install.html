@@ -52,17 +52,51 @@
         color: var(--teal);
       }
 
+      button,
       a.button {
         min-height: 42px;
         padding: 0 18px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        border: 1px solid var(--orange);
         border-radius: 8px;
         background: var(--orange);
         color: #101014;
+        font: inherit;
         font-weight: 800;
         text-decoration: none;
+        cursor: pointer;
+      }
+
+      .secondary {
+        border-color: var(--line);
+        background: #0b1518;
+        color: var(--text);
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .url-box {
+        width: 100%;
+        min-height: 40px;
+        margin: 8px 0 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #0b1518;
+        color: var(--teal);
+        padding: 9px 12px;
+        font: inherit;
+      }
+
+      .status {
+        min-height: 20px;
+        color: var(--teal);
+        font-weight: 700;
       }
     </style>
   </head>
@@ -70,9 +104,41 @@
     <main>
       <img src="plugins/automation-exporter-editor/icon.svg" alt="">
       <h1>ATLAS Automation Exporter / Editor</h1>
-      <p>Fuege dieses Repository in ATLAS Administration hinzu, um das Plugin im Hub zu testen.</p>
-      <p><code>https://raw.githubusercontent.com/rockbaer2007/atlas-automation-exporter-editor-plugin/main/repository.json</code></p>
-      <a class="button" href="https://raw.githubusercontent.com/rockbaer2007/atlas-automation-exporter-editor-plugin/main/repository.json">Repository JSON oeffnen</a>
+      <p>Fuege dieses GitHub-Repository direkt in ATLAS Administration hinzu. ATLAS erkennt daraus automatisch die passende <code>repository.json</code>.</p>
+      <input id="github-url" class="url-box" value="https://github.com/rockbaer2007/atlas-automation-exporter-editor-plugin" readonly>
+      <div class="actions">
+        <button id="copy-github-url" type="button">GitHub-URL kopieren</button>
+        <button id="copy-raw-url" class="secondary" type="button">Repository-JSON kopieren</button>
+        <a class="button secondary" href="https://raw.githubusercontent.com/rockbaer2007/atlas-automation-exporter-editor-plugin/main/repository.json">JSON oeffnen</a>
+      </div>
+      <p id="status" class="status" aria-live="polite"></p>
     </main>
+    <script>
+      const githubUrl = "https://github.com/rockbaer2007/atlas-automation-exporter-editor-plugin";
+      const rawUrl = "https://raw.githubusercontent.com/rockbaer2007/atlas-automation-exporter-editor-plugin/main/repository.json";
+      const input = document.querySelector("#github-url");
+      const status = document.querySelector("#status");
+
+      async function copyText(value, label) {
+        try {
+          await navigator.clipboard.writeText(value);
+          status.textContent = `${label} kopiert. In ATLAS Administration einfuegen.`;
+        } catch {
+          input.value = value;
+          input.select();
+          status.textContent = "Automatisches Kopieren nicht moeglich. URL ist markiert.";
+        }
+      }
+
+      document.querySelector("#copy-github-url").addEventListener("click", () => {
+        void copyText(githubUrl, "GitHub-URL");
+      });
+
+      document.querySelector("#copy-raw-url").addEventListener("click", () => {
+        void copyText(rawUrl, "Repository-JSON-URL");
+      });
+
+      input.addEventListener("click", () => input.select());
+    </script>
   </body>
 </html>

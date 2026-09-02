@@ -21,7 +21,11 @@ Use the install page:
 
 `https://rockbaer2007.github.io/atlas-automation-exporter-editor-plugin/install.html`
 
-Or add the repository JSON directly in ATLAS Administration:
+Or add the GitHub repository directly in ATLAS Administration:
+
+`https://github.com/rockbaer2007/atlas-automation-exporter-editor-plugin`
+
+ATLAS also accepts the raw repository JSON directly:
 
 `https://raw.githubusercontent.com/rockbaer2007/atlas-automation-exporter-editor-plugin/main/repository.json`
 
