@@ -15,6 +15,11 @@ architecture.
   Version: <code>0.1.5</code>
 </p>
 
+Current ATLAS/Home Assistant App/Add-on target: `0.1.128`. In that ATLAS
+version, the Plugin Hub keeps long capability lists and sidebar URLs collapsed
+by default and can copy either a direct Webpage-dashboard URL or a
+`panel_iframe` YAML block for this plugin.
+
 ## Install in ATLAS
 
 Use the install page:
@@ -34,6 +39,8 @@ ATLAS also accepts the raw repository JSON directly:
 - read `/config/automations.yaml` through the approved File Studio path
 - upload external YAML files for local analysis
 - list detected automations with alias, id, entities and services
+- detect Home Assistant services from classic `service:` entries and modern
+  `action: domain.service` entries
 - show analysis hints for missing or duplicate ids/aliases, missing triggers or
   actions and disabled automations
 - show selected automation YAML with Studio-like highlighting
