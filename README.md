@@ -12,7 +12,7 @@ architecture.
 <p>
   <strong>ATLAS Automation Exporter / Editor</strong><br>
   Plugin ID: <code>atlas.plugin.automation-exporter-editor</code><br>
-  Version: <code>0.1.0</code>
+  Version: <code>0.1.2</code>
 </p>
 
 ## Install in ATLAS
@@ -34,6 +34,9 @@ ATLAS also accepts the raw repository JSON directly:
 - read `/config/automations.yaml` through the approved File Studio path
 - upload external YAML files for local analysis
 - list detected automations with alias, id, entities and services
+- show analysis hints for missing or duplicate ids/aliases, missing triggers or
+  actions and disabled automations
+- filter to automations with hints only
 - configure a target export folder label
 - export selected automations as individual YAML files
 - use filenames like `name_dd_mm_yy-hh_mm_ss.yaml`
