@@ -12,7 +12,7 @@ architecture.
 <p>
   <strong>ATLAS Automation Exporter / Editor</strong><br>
   Plugin ID: <code>atlas.plugin.automation-exporter-editor</code><br>
-  Version: <code>0.1.4</code>
+  Version: <code>0.1.5</code>
 </p>
 
 ## Install in ATLAS
@@ -37,6 +37,7 @@ ATLAS also accepts the raw repository JSON directly:
 - show analysis hints for missing or duplicate ids/aliases, missing triggers or
   actions and disabled automations
 - show selected automation YAML with Studio-like highlighting
+- keep the automation list internally scrollable with roughly 15 visible rows
 - filter to automations with hints only
 - configure a target export folder label
 - export selected automations as individual YAML files
