@@ -5,7 +5,7 @@ automation workflows. It starts as a safe analysis and export surface inspired
 by the existing Windows Automation Exporter.
 
 Current plugin version: `0.1.5`. Current ATLAS/Home Assistant App/Add-on target:
-`0.1.128`.
+`0.1.129`.
 
 ## First Scope
 

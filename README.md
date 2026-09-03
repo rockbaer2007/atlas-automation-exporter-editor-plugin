@@ -15,7 +15,7 @@ architecture.
   Version: <code>0.1.5</code>
 </p>
 
-Current ATLAS/Home Assistant App/Add-on target: `0.1.128`. In that ATLAS
+Current ATLAS/Home Assistant App/Add-on target: `0.1.129`. In that ATLAS
 version, the Plugin Hub keeps long capability lists and sidebar URLs collapsed
 by default and can copy either a direct Webpage-dashboard URL or a
 `panel_iframe` YAML block for this plugin.
