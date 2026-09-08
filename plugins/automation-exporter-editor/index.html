@@ -13,10 +13,32 @@
           <p class="eyebrow">ATLAS Plugin</p>
           <h1>Automation Exporter / Editor</h1>
         </div>
-        <a class="ghost-link" href="/plugin-assets/file-studio/index.html">File Studio</a>
+        <div class="header-actions">
+          <div class="segmented-control theme-toggle" aria-label="Theme">
+            <button type="button" data-theme-mode="auto">Auto</button>
+            <button type="button" data-theme-mode="light">Light</button>
+            <button type="button" data-theme-mode="dark">Dark</button>
+          </div>
+          <div class="segmented-control language-toggle" aria-label="Sprache">
+            <button type="button" data-language="de">DE</button>
+            <button type="button" data-language="en">EN</button>
+          </div>
+          <a class="ghost-link" href="/plugin-assets/file-studio/index.html" data-open-file-studio>File Studio</a>
+          <a class="ghost-link" href="hub" data-open-hub>Plugin Hub</a>
+        </div>
       </header>
 
       <section class="source-grid" aria-label="Quellen und Export">
+        <article class="panel summary-panel">
+          <h2>Status</h2>
+          <dl class="summary-list">
+            <div><dt>Automationen</dt><dd id="count-automations">0</dd></div>
+            <div><dt>Entitäten</dt><dd id="count-entities">0</dd></div>
+            <div><dt>Services</dt><dd id="count-services">0</dd></div>
+            <div><dt>Hinweise</dt><dd id="count-warnings">0</dd></div>
+          </dl>
+        </article>
+
         <article class="panel source-panel">
           <h2>Quelle</h2>
           <div class="button-row">
@@ -33,24 +55,14 @@
           <h2>Export</h2>
           <label class="field-label" for="export-folder">Export-Ordner</label>
           <input id="export-folder" type="text" value="/config/atlas_exports/automations">
-          <p class="field-hint">Der Browser laedt Dateien lokal herunter. Der Ordner ist die Zielvorgabe fuer den spaeteren File-Studio-Schreibpfad.</p>
-        </article>
-
-        <article class="panel summary-panel">
-          <h2>Status</h2>
-          <dl class="summary-list">
-            <div><dt>Automationen</dt><dd id="count-automations">0</dd></div>
-            <div><dt>Entitaeten</dt><dd id="count-entities">0</dd></div>
-            <div><dt>Services</dt><dd id="count-services">0</dd></div>
-            <div><dt>Hinweise</dt><dd id="count-warnings">0</dd></div>
-          </dl>
+          <p class="field-hint">Ausgewählte Automationen werden als einzelne YAML-Dateien gespeichert. Existierende Dateien werden nicht überschrieben.</p>
         </article>
       </section>
 
       <section class="workspace">
         <aside class="panel tools-panel">
           <h2>Werkzeuge</h2>
-          <input id="search" type="search" placeholder="Alias, ID, Entitaet oder Service suchen">
+          <input id="search" type="search" placeholder="Alias, ID, Entität oder Service suchen">
           <label class="checkbox-row">
             <input id="filter-warnings" type="checkbox">
             <span>Nur Hinweise anzeigen</span>
@@ -59,20 +71,21 @@
             <button id="select-all" type="button">Alle markieren</button>
             <button id="select-none" type="button">Auswahl leeren</button>
             <button id="export-selected" type="button" class="primary">Auswahl exportieren</button>
+            <button id="preview-conflicts" type="button">Konflikte prüfen</button>
           </div>
-          <h3>Naechste Ausbaustufe</h3>
+          <h3>Nächste Ausbaustufe</h3>
           <ul class="roadmap">
-            <li>System-Export direkt in freigegebenen Ordner schreiben</li>
-            <li>Vergleich mit File-Studio-Versionen</li>
-            <li>Rueckfuehrungsplan fuer automations.yaml</li>
-            <li>Gruppierung nach Bereich, Geraet und Domain</li>
+            <li>Direkt aus der Exportliste in File Studio öffnen</li>
+            <li>Normale Export-Version mit ID und bereinigte Import-Version ohne ID</li>
+            <li>Konflikte anhand von ID und Alias vorab markieren</li>
+            <li>Gruppierung nach Domain, Bereich und Gerät</li>
           </ul>
         </aside>
 
         <section class="panel table-panel" aria-label="Automationen">
           <div class="table-header">
             <h2>Automationen</h2>
-            <span id="selection-count">0 ausgewaehlt</span>
+            <span id="selection-count">0 ausgewählt</span>
           </div>
           <div id="automation-list" class="automation-list empty-state">
             Lade eine Systemdatei oder eine fremde YAML hoch.
@@ -81,7 +94,7 @@
 
         <aside class="panel details-panel">
           <h2>Details</h2>
-          <div id="details" class="details empty-state">Waehle eine Automation aus.</div>
+          <div id="details" class="details empty-state">Wähle eine Automation aus.</div>
         </aside>
       </section>
 

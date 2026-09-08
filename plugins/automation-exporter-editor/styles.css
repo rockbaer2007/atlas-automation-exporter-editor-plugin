@@ -1,4 +1,20 @@
 :root {
+  color-scheme: light;
+  --bg: #f5f7fb;
+  --panel: #ffffff;
+  --panel-strong: #f8fafc;
+  --line: #d8e0ec;
+  --text: #172033;
+  --muted: #536079;
+  --teal: #0f766e;
+  --teal-soft: #115e59;
+  --orange: #ff9f0a;
+  --danger: #b91c1c;
+  --button-bg: #f8fafc;
+  --code-bg: #eef4f7;
+}
+
+:root[data-theme="dark"] {
   color-scheme: dark;
   --bg: #071115;
   --panel: #10191d;
@@ -8,8 +24,9 @@
   --muted: #b7c8ce;
   --teal: #19d6c3;
   --teal-soft: #7af7df;
-  --orange: #ff9f0a;
   --danger: #ff5b57;
+  --button-bg: #0b1518;
+  --code-bg: #071115;
 }
 
 * {
@@ -30,7 +47,7 @@ input,
 .ghost-link {
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #0b1518;
+  background: var(--button-bg);
   color: var(--text);
   font: inherit;
 }
@@ -82,6 +99,7 @@ input {
 }
 
 .topbar,
+.header-actions,
 .source-grid,
 .workspace,
 .table-header,
@@ -97,6 +115,37 @@ input {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 18px;
+}
+
+.header-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.segmented-control {
+  display: inline-flex;
+  min-height: 38px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--button-bg);
+}
+
+.segmented-control button {
+  min-height: 36px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.segmented-control button[aria-pressed="true"] {
+  background: var(--teal);
+  color: var(--bg);
 }
 
 .eyebrow {
@@ -137,7 +186,7 @@ h3 {
 
 .source-grid {
   display: grid;
-  grid-template-columns: 1.1fr 1fr 0.85fr;
+  grid-template-columns: 300px minmax(340px, 1fr) minmax(360px, 1.4fr);
   margin-bottom: 16px;
 }
 
@@ -310,6 +359,27 @@ h3 {
   color: var(--orange);
 }
 
+.tag.group {
+  border-color: color-mix(in srgb, var(--teal), var(--line) 34%);
+  color: var(--teal-soft);
+}
+
+.export-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.copy-fallback {
+  position: fixed;
+  left: -1000px;
+  top: -1000px;
+  width: 1px;
+  height: 1px;
+}
+
 .details pre {
   max-height: 44vh;
   overflow: auto;
@@ -317,8 +387,8 @@ h3 {
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #071115;
-  color: #e6f7f5;
+  background: var(--code-bg);
+  color: var(--text);
   white-space: pre-wrap;
 }
 

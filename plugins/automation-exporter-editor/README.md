@@ -4,9 +4,6 @@ ATLAS Automation Exporter / Editor is an ATLAS plugin for Home Assistant
 automation workflows. It starts as a safe analysis and export surface inspired
 by the existing Windows Automation Exporter.
 
-Current plugin version: `0.1.5`. Current ATLAS/Home Assistant App/Add-on target:
-`0.1.129`.
-
 ## First Scope
 
 - read `/config/automations.yaml` through the approved File Studio path
@@ -18,9 +15,17 @@ Current plugin version: `0.1.5`. Current ATLAS/Home Assistant App/Add-on target:
 - show the selected automation YAML with Studio-like highlighting
 - keep the automation list internally scrollable with roughly 15 visible rows
 - configure a target export folder label
-- export selected automations as separate YAML files
-- name exports as `name_dd_mm_yy-hh_mm_ss.yaml`
+- create a safety backup before reading the real `/config/automations.yaml`
+- store backups in timestamped folders while keeping the filename
+  `automations.yaml`
+- export selected automations as separate YAML files in timestamped run folders
+- write a normal `export-version` with `id` and a
+  `bereinigte-import-version` without `id` for the Home Assistant YAML editor
+- keep automation filenames clean, for example
+  `/config/atlas_exports/automations/2026-09-08_19-30-12-125/export-version/kitchen_light.yaml`
 - keep an overview of exported automations
 - open File Studio for further editing
 
-The first version does not write back into Home Assistant automatically.
+The plugin does not write back into Home Assistant system files. Editing and
+manual restore workflows should continue through File Studio and Home
+Assistant's own YAML tools.

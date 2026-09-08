@@ -16,6 +16,7 @@ const elements = {
   selectAll: document.querySelector("#select-all"),
   selectNone: document.querySelector("#select-none"),
   exportSelected: document.querySelector("#export-selected"),
+  previewConflicts: document.querySelector("#preview-conflicts"),
   clearHistory: document.querySelector("#clear-history"),
   list: document.querySelector("#automation-list"),
   details: document.querySelector("#details"),
@@ -27,29 +28,99 @@ const elements = {
   countWarnings: document.querySelector("#count-warnings"),
 };
 
-const demoYaml = `- id: atlas_demo_light
-  alias: Licht Kueche Abend
-  trigger:
-    - platform: state
-      entity_id: binary_sensor.kueche_bewegung
-      to: "on"
-  action:
-    - service: light.turn_on
-      target:
-        entity_id: light.kueche
+let currentLanguage = readLanguageFromLocation();
+let currentThemePreference = readThemePreferenceFromLocation() ?? "auto";
 
-- id: atlas_demo_heating
-  alias: Heizung Eco Nacht
-  trigger:
-    - platform: time
-      at: "22:30:00"
-  action:
-    - service: climate.set_preset_mode
-      target:
-        entity_id: climate.wohnzimmer
-      data:
-        preset_mode: eco
-`;
+function createAppUrl(path) {
+  try {
+    const baseUrl = new URL(window.location.href);
+    baseUrl.search = "";
+    baseUrl.hash = "";
+    baseUrl.pathname = baseUrl.pathname.replace(/\/plugin-assets\/automation-exporter-editor\/.*$/, "/");
+    if (!baseUrl.pathname.endsWith("/")) {
+      baseUrl.pathname = `${baseUrl.pathname}/`;
+    }
+    return new URL(String(path ?? "").replace(/^\/+/, ""), baseUrl).toString();
+  } catch {
+    return path;
+  }
+}
+
+function readThemePreferenceFromLocation() {
+  try {
+    const preference = new URL(window.location.href).searchParams.get("theme");
+    return ["auto", "light", "dark"].includes(preference) ? preference : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function readLanguageFromLocation() {
+  try {
+    const language = new URL(window.location.href).searchParams.get("language");
+    return language === "de" || language === "en" ? language : "de";
+  } catch {
+    return "de";
+  }
+}
+
+function bindHubLinks() {
+  for (const link of document.querySelectorAll("[data-open-hub]")) {
+    const url = new URL(createAppUrl("hub"), window.location.href);
+    url.searchParams.set("theme", currentThemePreference);
+    url.searchParams.set("language", currentLanguage);
+    link.href = url.toString();
+  }
+
+  for (const link of document.querySelectorAll("[data-open-file-studio]")) {
+    const url = new URL(createAppUrl("plugin-assets/file-studio/index.html"), window.location.href);
+    url.searchParams.set("theme", currentThemePreference);
+    url.searchParams.set("language", currentLanguage);
+    link.href = url.toString();
+  }
+}
+
+function applyThemePreference(preference = currentThemePreference) {
+  currentThemePreference = ["auto", "light", "dark"].includes(preference) ? preference : "auto";
+  const resolvedTheme = currentThemePreference === "auto" && window.matchMedia?.("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : currentThemePreference === "dark"
+      ? "dark"
+      : "light";
+  document.documentElement.dataset.theme = resolvedTheme;
+  document.documentElement.dataset.themePreference = currentThemePreference;
+  updateChromeControls();
+  updateLocationState();
+  bindHubLinks();
+}
+
+function applyLanguage(language = currentLanguage) {
+  currentLanguage = language === "en" ? "en" : "de";
+  document.documentElement.lang = currentLanguage;
+  updateChromeControls();
+  updateLocationState();
+  bindHubLinks();
+}
+
+function updateChromeControls() {
+  for (const button of document.querySelectorAll("[data-theme-mode]")) {
+    button.setAttribute("aria-pressed", String(button.dataset.themeMode === currentThemePreference));
+  }
+  for (const button of document.querySelectorAll("[data-language]")) {
+    button.setAttribute("aria-pressed", String(button.dataset.language === currentLanguage));
+  }
+}
+
+function updateLocationState() {
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.set("theme", currentThemePreference);
+    url.searchParams.set("language", currentLanguage);
+    window.history.replaceState(null, "", url.toString());
+  } catch {
+    // The current URL cannot be rewritten in every embedded browser mode.
+  }
+}
 
 elements.loadSystem.addEventListener("click", loadSystemAutomations);
 elements.upload.addEventListener("change", handleUpload);
@@ -60,34 +131,51 @@ elements.selectNone.addEventListener("click", () => {
   state.selectedIds.clear();
   render();
 });
-elements.exportSelected.addEventListener("click", exportSelected);
+elements.exportSelected.addEventListener("click", () => void exportSelected());
+elements.previewConflicts.addEventListener("click", previewConflicts);
 elements.clearHistory.addEventListener("click", () => {
   state.exports = [];
   renderHistory();
 });
 
-analyzeSource("Beispiel", demoYaml);
+for (const button of document.querySelectorAll("[data-theme-mode]")) {
+  button.addEventListener("click", () => applyThemePreference(button.dataset.themeMode));
+}
+for (const button of document.querySelectorAll("[data-language]")) {
+  button.addEventListener("click", () => applyLanguage(button.dataset.language));
+}
+window.matchMedia?.("(prefers-color-scheme: dark)")?.addEventListener("change", () => {
+  if (currentThemePreference === "auto") {
+    applyThemePreference("auto");
+  }
+});
+
+applyLanguage(currentLanguage);
+applyThemePreference(currentThemePreference);
+setStatus("Bereit. Lade die echte /config/automations.yaml oder lade eine fremde YAML hoch.");
 
 async function loadSystemAutomations() {
   setStatus("Lese /config/automations.yaml ...");
-  const candidates = ["/automations.yaml", "/config/automations.yaml"];
-  for (const path of candidates) {
-    try {
-      const response = await fetch(`/api/file-studio/file?path=${encodeURIComponent(path)}`);
-      if (!response.ok) {
-        continue;
-      }
-      const payload = await response.json();
-      const content = typeof payload.content === "string" ? payload.content : "";
-      if (content.trim()) {
-        analyzeSource("/config/automations.yaml", content);
-        return;
-      }
-    } catch {
-      // Try the next candidate, then fall back to the visible message below.
+  try {
+    const url = new URL(createAppUrl("api/file-studio/file"), window.location.href);
+    url.searchParams.set("path", "/config/automations.yaml");
+    const response = await fetch(url.toString(), { cache: "no-store" });
+    if (!response.ok) {
+      setStatus("/config/automations.yaml ist nicht lesbar. Bitte /config freigeben oder YAML hochladen.");
+      return;
     }
+    const payload = await response.json();
+    const content = typeof payload.content === "string" ? payload.content : "";
+    if (!content.trim()) {
+      setStatus("/config/automations.yaml ist leer.");
+      return;
+    }
+    const backup = await createSourceBackup(content);
+    analyzeSource(payload.path || "/config/automations.yaml", content);
+    setStatus(`${payload.path || "/config/automations.yaml"}: ${state.automations.length} Automationen erkannt. Backup: ${backup.path}`);
+  } catch {
+    setStatus("/config/automations.yaml konnte nicht gesichert oder geladen werden. Bitte File-Studio-Zugriff prüfen oder YAML hochladen.");
   }
-  setStatus("Systemdatei nicht lesbar. Bitte ueber File Studio /config freigeben oder YAML hochladen.");
 }
 
 async function handleUpload(event) {
@@ -103,7 +191,7 @@ async function handleUpload(event) {
 function analyzeSource(sourceName, content) {
   state.sourceName = sourceName;
   state.automations = parseAutomations(content);
-  state.selectedIds = new Set(state.automations.map(item => item.localId));
+  state.selectedIds = new Set();
   state.activeId = state.automations[0]?.localId ?? "";
   const warningCount = countWarnings(state.automations);
   const warningText = warningCount > 0 ? `, ${warningCount} Hinweis(e)` : ", keine Hinweise";
@@ -127,6 +215,9 @@ function parseAutomations(content) {
       id,
       entities,
       services,
+      domains: extractDomains(entities, services),
+      areas: extractAreas(entities),
+      devices: extractDevices(entities),
       triggerCount,
       conditionCount,
       actionCount,
@@ -193,7 +284,11 @@ function countBy(values) {
 }
 
 function normalizeAutomationYaml(block) {
-  return block.replace(/^\s*-\s*/, "").replace(/^\s*id:\s*.*\n?/m, "").trimStart() + "\n";
+  const lines = block.replace(/\r\n/g, "\n").replace(/^\s*-\s*/, "").split("\n");
+  return lines
+    .map((line, index) => index === 0 ? line : line.replace(/^\s{2}/, ""))
+    .join("\n")
+    .trimStart() + "\n";
 }
 
 function uniqueMatches(text, regex) {
@@ -202,6 +297,28 @@ function uniqueMatches(text, regex) {
     values.add(match[1]);
   }
   return Array.from(values).sort((a, b) => a.localeCompare(b));
+}
+
+function extractDomains(entities, services) {
+  return uniqueValues([...entities, ...services].map(value => value.split(".")[0]).filter(Boolean));
+}
+
+function extractAreas(entities) {
+  return uniqueValues(entities
+    .map(value => value.split(".")[1] ?? "")
+    .map(entityId => entityId.split("_")[0])
+    .filter(Boolean));
+}
+
+function extractDevices(entities) {
+  return uniqueValues(entities
+    .map(value => value.split(".")[1] ?? "")
+    .map(entityId => entityId.split("_").slice(0, 2).join("_"))
+    .filter(Boolean));
+}
+
+function uniqueValues(values) {
+  return Array.from(new Set(values)).sort((a, b) => a.localeCompare(b));
 }
 
 function render() {
@@ -229,13 +346,28 @@ function createAutomationRow(automation) {
   title.textContent = automation.alias;
   const meta = document.createElement("div");
   meta.className = "automation-meta";
-  meta.textContent = `#${automation.sourceIndex} · ID ${automation.id || "-"} · ${automation.triggerCount} Trigger · ${automation.conditionCount} Conditions · ${automation.actionCount} Actions`;
+  meta.textContent = [
+    `#${automation.sourceIndex}`,
+    `ID ${automation.id || "-"}`,
+    `${automation.triggerCount} Trigger`,
+    `${automation.conditionCount} Conditions`,
+    `${automation.actionCount} Actions`,
+    `Domain ${automation.domains.slice(0, 3).join(", ") || "-"}`,
+  ].join(" · ");
   const tags = document.createElement("div");
   tags.className = "tag-list";
-  for (const value of [...automation.warnings.map(warning => `Hinweis: ${warning}`), ...automation.entities.slice(0, 4), ...automation.services.slice(0, 3)]) {
+  for (const value of [
+    ...automation.warnings.map(warning => `Hinweis: ${warning}`),
+    ...automation.domains.slice(0, 3).map(domain => `Domain: ${domain}`),
+    ...automation.areas.slice(0, 2).map(area => `Bereich: ${area}`),
+    ...automation.devices.slice(0, 2).map(device => `Gerät: ${device}`),
+    ...automation.entities.slice(0, 4),
+    ...automation.services.slice(0, 3),
+  ]) {
     const tag = document.createElement("span");
     tag.className = "tag";
     if (value.startsWith("Hinweis: ")) tag.classList.add("warning");
+    if (value.startsWith("Domain: ") || value.startsWith("Bereich: ") || value.startsWith("Gerät: ")) tag.classList.add("group");
     tag.textContent = value;
     tags.append(tag);
   }
@@ -253,7 +385,7 @@ function createAutomationRow(automation) {
   const checkbox = document.createElement("input");
   checkbox.type = "checkbox";
   checkbox.checked = state.selectedIds.has(automation.localId);
-  checkbox.setAttribute("aria-label", `${automation.alias} auswaehlen`);
+  checkbox.setAttribute("aria-label", `${automation.alias} auswählen`);
   checkbox.addEventListener("change", () => {
     if (checkbox.checked) {
       state.selectedIds.add(automation.localId);
@@ -272,18 +404,28 @@ function renderDetails() {
   elements.details.classList.toggle("empty-state", !automation);
   elements.details.innerHTML = "";
   if (!automation) {
-    elements.details.textContent = "Waehle eine Automation aus.";
+    elements.details.textContent = "Wähle eine Automation aus.";
     return;
   }
   const title = document.createElement("strong");
   title.textContent = automation.alias;
   const meta = document.createElement("p");
   meta.className = "muted";
-  meta.textContent = `${automation.triggerCount} Trigger, ${automation.conditionCount} Conditions, ${automation.actionCount} Actions, ${automation.entities.length} Entitaeten, ${automation.services.length} Services`;
+  meta.textContent = `${automation.triggerCount} Trigger, ${automation.conditionCount} Conditions, ${automation.actionCount} Actions, ${automation.entities.length} Entitäten, ${automation.services.length} Services`;
   const pre = document.createElement("pre");
   pre.className = "yaml-preview";
   pre.innerHTML = highlightYaml(automation.yaml);
-  elements.details.append(title, meta, createTagBlock("Hinweise", automation.warnings, "warning"), createTagBlock("Entitaeten", automation.entities), createTagBlock("Services", automation.services), pre);
+  elements.details.append(
+    title,
+    meta,
+    createTagBlock("Hinweise", automation.warnings, "warning"),
+    createTagBlock("Domains", automation.domains),
+    createTagBlock("Bereiche", automation.areas),
+    createTagBlock("Geräte", automation.devices),
+    createTagBlock("Entitäten", automation.entities),
+    createTagBlock("Services", automation.services),
+    pre,
+  );
 }
 
 function createTagBlock(label, values, variant = "") {
@@ -310,7 +452,7 @@ function renderSummary() {
   elements.countEntities.textContent = String(allEntities.size);
   elements.countServices.textContent = String(allServices.size);
   elements.countWarnings.textContent = String(countWarnings(state.automations));
-  elements.selectionCount.textContent = `${state.selectedIds.size} ausgewaehlt`;
+  elements.selectionCount.textContent = `${state.selectedIds.size} ausgewählt`;
 }
 
 function renderHistory() {
@@ -324,12 +466,38 @@ function renderHistory() {
     const row = document.createElement("div");
     row.className = "export-row";
     const name = document.createElement("div");
-    name.innerHTML = `<strong>${escapeHtml(item.filename)}</strong><div class="automation-meta">${escapeHtml(item.folder)} · ${escapeHtml(item.sourceName)}</div>`;
+    const groups = [
+      item.domains?.length ? `Domains: ${item.domains.join(", ")}` : "",
+      item.areas?.length ? `Bereiche: ${item.areas.join(", ")}` : "",
+      item.devices?.length ? `Geräte: ${item.devices.join(", ")}` : "",
+    ].filter(Boolean).join(" · ");
+    name.innerHTML = `<strong>${escapeHtml(item.filename)}</strong><div class="automation-meta">${escapeHtml(item.status ?? "gespeichert")} · ${escapeHtml(item.folder)} · ${escapeHtml(item.sourceName)}</div>${groups ? `<div class="automation-meta">${escapeHtml(groups)}</div>` : ""}`;
+    const actions = document.createElement("div");
+    actions.className = "export-actions";
     const open = document.createElement("a");
     open.className = "ghost-link";
-    open.href = "/plugin-assets/file-studio/index.html";
-    open.textContent = "In File Studio bearbeiten";
-    row.append(name, open);
+    open.href = createFileStudioFileUrl(item.path);
+    open.textContent = "Export öffnen";
+    const openImport = document.createElement("a");
+    openImport.className = "ghost-link";
+    openImport.href = createFileStudioFileUrl(item.importPath);
+    openImport.textContent = "Import-Version öffnen";
+    const copy = document.createElement("button");
+    copy.type = "button";
+    copy.textContent = "Export-YAML kopieren";
+    copy.addEventListener("click", () => void copyText(item.yaml, `${item.filename}: YAML kopiert.`));
+    const copyImport = document.createElement("button");
+    copyImport.type = "button";
+    copyImport.textContent = "Import-YAML kopieren";
+    copyImport.addEventListener("click", () => void copyText(item.importYaml ?? item.yaml, `${item.filename}: bereinigte Import-YAML kopiert.`));
+    actions.append(open, copy);
+    if (item.importPath) {
+      actions.append(openImport);
+    }
+    if (item.importYaml) {
+      actions.append(copyImport);
+    }
+    row.append(name, actions);
     elements.history.append(row);
   }
 }
@@ -366,22 +534,78 @@ function selectVisible() {
   render();
 }
 
-function exportSelected() {
+async function exportSelected() {
   const selected = state.automations.filter(item => state.selectedIds.has(item.localId));
   if (selected.length === 0) {
-    setStatus("Keine Automation fuer den Export ausgewaehlt.");
+    setStatus("Keine Automation für den Export ausgewählt.");
     return;
   }
-  const timestamp = createTimestamp(new Date());
-  const folder = elements.exportFolder.value.trim() || "/config/atlas_exports/automations";
-  for (const automation of selected) {
-    const filename = `${slugify(automation.alias)}_${timestamp}.yaml`;
-    downloadText(filename, automation.yaml);
-    state.exports.unshift({ filename, folder, sourceName: state.sourceName });
+  const runFolderName = createExportRunFolderName(new Date());
+  const folder = normalizeExportFolder(elements.exportFolder.value);
+  const runFolder = `${folder}/${runFolderName}`;
+  const exportFolder = `${runFolder}/export-version`;
+  const importFolder = `${runFolder}/bereinigte-import-version`;
+  elements.exportSelected.disabled = true;
+  setStatus(`Exportiere ${selected.length} Automation(en) nach ${runFolder} ...`);
+  try {
+    await ensureExportFolder(exportFolder);
+    await ensureExportFolder(importFolder);
+    const usedFilenames = new Set();
+    const exported = [];
+    for (const automation of selected) {
+      const filename = createExportFilename(automation.alias, usedFilenames);
+      const exportResult = await writeExportFile(exportFolder, filename, automation.yaml);
+      const importYaml = createImportAutomationYaml(automation.yaml);
+      const importResult = await writeExportFile(importFolder, filename, importYaml);
+      exported.push({
+        filename,
+        path: exportResult.path || `${exportFolder}/${filename}`,
+        importPath: importResult.path || `${importFolder}/${filename}`,
+        folder: runFolder,
+        sourceName: state.sourceName,
+        status: "Export und bereinigte Import-Version gespeichert",
+        yaml: automation.yaml,
+        importYaml,
+        id: automation.id,
+        alias: automation.alias,
+        domains: automation.domains,
+        areas: automation.areas,
+        devices: automation.devices,
+      });
+    }
+    state.exports.unshift(...exported);
+    state.exports = state.exports.slice(0, 50);
+    setStatus(`${exported.length} Automation(en) in ${runFolder} gespeichert: export-version mit ID, bereinigte-import-version ohne ID.`);
+    renderHistory();
+  } catch (error) {
+    setStatus(`Export fehlgeschlagen: ${describeExportError(error)} Browser-Download wird als Rückfall genutzt.`);
+    const usedFilenames = new Set();
+    for (const automation of selected) {
+      const filename = createExportFilename(automation.alias, usedFilenames);
+      const importYaml = createImportAutomationYaml(automation.yaml);
+      downloadText(filename, automation.yaml);
+      downloadText(`import-${filename}`, importYaml);
+      state.exports.unshift({
+        filename,
+        path: filename,
+        importPath: "",
+        folder: "Browser-Download",
+        sourceName: state.sourceName,
+        status: "download",
+        yaml: automation.yaml,
+        importYaml,
+        id: automation.id,
+        alias: automation.alias,
+        domains: automation.domains,
+        areas: automation.areas,
+        devices: automation.devices,
+      });
+    }
+    state.exports = state.exports.slice(0, 50);
+    renderHistory();
+  } finally {
+    elements.exportSelected.disabled = false;
   }
-  state.exports = state.exports.slice(0, 50);
-  setStatus(`${selected.length} Automation(en) als YAML vorbereitet.`);
-  renderHistory();
 }
 
 function downloadText(filename, content) {
@@ -396,9 +620,237 @@ function downloadText(filename, content) {
   URL.revokeObjectURL(url);
 }
 
-function createTimestamp(date) {
+function createImportAutomationYaml(yaml) {
+  return yaml.replace(/^\s*id:\s*.*\n?/m, "").trimStart() + "\n";
+}
+
+function previewConflicts() {
+  const selected = state.automations.filter(item => state.selectedIds.has(item.localId));
+  if (!selected.length) {
+    setStatus("Keine Automation für die Konfliktprüfung ausgewählt.");
+    return;
+  }
+  const conflicts = findConflicts(selected);
+  if (!conflicts.length) {
+    setStatus(`Konfliktprüfung: ${selected.length} Automation(en), keine doppelten IDs oder Aliase in der Auswahl.`);
+    return;
+  }
+  const summary = conflicts.slice(0, 5).map(conflict => `${conflict.kind} "${conflict.value}" (${conflict.count}x)`).join("; ");
+  setStatus(`Konfliktprüfung: ${conflicts.length} mögliche Konflikte. ${summary}`);
+}
+
+function findConflicts(automations) {
+  const conflicts = [];
+  const idCounts = countBy(automations.map(item => item.id).filter(Boolean));
+  const aliasCounts = countBy(automations.map(item => item.alias).filter(Boolean).map(value => value.toLowerCase()));
+  for (const [value, count] of idCounts) {
+    if (count > 1) conflicts.push({ kind: "ID", value, count });
+  }
+  for (const [value, count] of aliasCounts) {
+    if (count > 1) conflicts.push({ kind: "Alias", value, count });
+  }
+  return conflicts;
+}
+
+async function copyText(value, successMessage) {
+  try {
+    await navigator.clipboard.writeText(value);
+  } catch {
+    const textarea = document.createElement("textarea");
+    textarea.value = value;
+    textarea.className = "copy-fallback";
+    document.body.append(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    textarea.remove();
+  }
+  setStatus(successMessage);
+}
+
+function createFileStudioFileUrl(path) {
+  const fileStudioUrl = new URL(createAppUrl("plugin-assets/file-studio/index.html"), window.location.href);
+  fileStudioUrl.searchParams.set("theme", currentThemePreference);
+  fileStudioUrl.searchParams.set("language", currentLanguage);
+  if (path && path.startsWith("/config/")) {
+    fileStudioUrl.searchParams.set("path", path);
+  }
+  return fileStudioUrl.toString();
+}
+
+async function createSourceBackup(content) {
+  const backupFolder = `/config/atlas_backups/automations/${createExportRunFolderName(new Date())}`;
+  await ensureExportFolder(backupFolder);
+  const result = await writeExportFile(backupFolder, "automations.yaml", content);
+  return {
+    folder: backupFolder,
+    path: result.path || `${backupFolder}/automations.yaml`,
+  };
+}
+
+async function ensureExportFolder(folder) {
+  const parts = folder.split("/").filter(Boolean);
+  if (parts[0] !== "config") {
+    throw new Error("Exportordner muss unter /config liegen.");
+  }
+  for (const part of parts.slice(1)) {
+    if (!isSafeFileStudioName(part)) {
+      throw new Error("Exportordner enthält ungültige Pfadteile.");
+    }
+  }
+  let current = "/config";
+  for (const part of parts.slice(1)) {
+    const parentPath = current;
+    current = `${current}/${part}`;
+    try {
+      await apiJson("api/file-studio/create-directory", {
+        method: "POST",
+        body: JSON.stringify({ parentPath, name: part }),
+      });
+    } catch (error) {
+      if (!/already exists/i.test(error instanceof Error ? error.message : String(error))) {
+        throw error;
+      }
+    }
+  }
+}
+
+async function writeExportFile(folder, filename, content) {
+  try {
+    return await writeFile(folder, filename, content, false);
+  } catch (uploadError) {
+    return await createAndWriteExportFile(folder, filename, content, uploadError);
+  }
+}
+
+async function writeFile(folder, filename, content, overwrite) {
+  const result = await apiJson("api/file-studio/upload", {
+    method: "POST",
+    body: JSON.stringify({
+      parentPath: folder,
+      name: filename,
+      contentBase64: encodeBase64Utf8(content),
+      overwrite,
+    }),
+  });
+  if (result.ok === false) {
+    throw new Error(result.error ?? "upload failed");
+  }
+  return result;
+}
+
+async function createAndWriteExportFile(folder, filename, content, uploadError) {
+  const path = `${folder}/${filename}`;
+  try {
+    await apiJson("api/file-studio/create-file", {
+      method: "POST",
+      body: JSON.stringify({
+        parentPath: folder,
+        name: filename,
+      }),
+    });
+    const result = await apiJson("api/file-studio/write", {
+      method: "POST",
+      body: JSON.stringify({
+        path,
+        content,
+      }),
+    });
+    if (result.ok === false) {
+      throw new Error(result.error ?? "write failed");
+    }
+    return {
+      ...result,
+      kind: "atlas.file-studio.export-write",
+      path: result.path || path,
+      name: filename,
+      replaced: false,
+    };
+  } catch (writeError) {
+    const firstMessage = uploadError instanceof Error ? uploadError.message : String(uploadError ?? "");
+    const secondMessage = writeError instanceof Error ? writeError.message : String(writeError ?? "");
+    throw new Error([firstMessage, secondMessage].filter(Boolean).join(" / "));
+  }
+}
+
+async function readFileContent(path) {
+  const url = new URL(createAppUrl("api/file-studio/file"), window.location.href);
+  url.searchParams.set("path", path);
+  const response = await fetch(url.toString(), { cache: "no-store" });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(body.error ?? body.message ?? `HTTP ${response.status}`);
+  }
+  return {
+    path: body.path || path,
+    content: typeof body.content === "string" ? body.content : "",
+  };
+}
+
+async function apiJson(path, options = {}) {
+  const response = await fetch(createAppUrl(path), {
+    cache: "no-store",
+    headers: {
+      "content-type": "application/json",
+      ...(options.headers ?? {}),
+    },
+    ...options,
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(body.error ?? body.message ?? `HTTP ${response.status}`);
+  }
+  return body;
+}
+
+function normalizeExportFolder(value) {
+  const normalized = String(value || "/config/atlas_exports/automations")
+    .replace(/\\/g, "/")
+    .trim()
+    .replace(/\/+$/g, "");
+  if (!normalized || normalized === "/") {
+    return "/config/atlas_exports/automations";
+  }
+  return `/${normalized.replace(/^\/+/, "")}`;
+}
+
+function createExportFilename(alias, usedFilenames) {
+  const baseName = slugify(alias);
+  let filename = `${baseName}.yaml`;
+  let index = 2;
+  while (usedFilenames.has(filename)) {
+    filename = `${baseName}-${index}.yaml`;
+    index += 1;
+  }
+  usedFilenames.add(filename);
+  return filename;
+}
+
+function isSafeFileStudioName(value) {
+  return Boolean(value) && value !== "." && value !== ".." && !value.includes("..") && !/[\\/]/.test(value);
+}
+
+function encodeBase64Utf8(value) {
+  const bytes = new TextEncoder().encode(value);
+  let binary = "";
+  for (let index = 0; index < bytes.length; index += 0x8000) {
+    binary += String.fromCharCode(...bytes.slice(index, index + 0x8000));
+  }
+  return btoa(binary);
+}
+
+function describeExportError(error) {
+  const message = error instanceof Error ? error.message : String(error ?? "unbekannter Fehler");
+  if (/outside configured root/i.test(message)) return "Pfad liegt außerhalb der freigegebenen Bereiche.";
+  if (/not found|parent directory/i.test(message)) return "Zielordner wurde nicht gefunden oder konnte nicht erstellt werden.";
+  if (/already exists/i.test(message)) return "Eine Zieldatei existiert bereits.";
+  if (/path separators|relative path/i.test(message)) return "Exportordner oder Dateiname ist ungültig.";
+  return message;
+}
+
+function createExportRunFolderName(date) {
   const two = value => String(value).padStart(2, "0");
-  return `${two(date.getDate())}_${two(date.getMonth() + 1)}_${String(date.getFullYear()).slice(-2)}-${two(date.getHours())}_${two(date.getMinutes())}_${two(date.getSeconds())}`;
+  const three = value => String(value).padStart(3, "0");
+  return `${date.getFullYear()}-${two(date.getMonth() + 1)}-${two(date.getDate())}_${two(date.getHours())}-${two(date.getMinutes())}-${two(date.getSeconds())}-${three(date.getMilliseconds())}`;
 }
 
 function slugify(value) {
