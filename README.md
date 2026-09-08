@@ -12,13 +12,13 @@ architecture.
 <p>
   <strong>ATLAS Automation Exporter / Editor</strong><br>
   Plugin ID: <code>atlas.plugin.automation-exporter-editor</code><br>
-  Version: <code>0.1.5</code>
+  Version: <code>0.1.23</code>
 </p>
 
-Current ATLAS/Home Assistant App/Add-on target: `0.1.129`. In that ATLAS
-version, the Plugin Hub keeps long capability lists and sidebar URLs collapsed
-by default and can copy either a direct Webpage-dashboard URL or a
-`panel_iframe` YAML block for this plugin.
+Current ATLAS/Home Assistant App/Add-on target: `0.1.176`. In that ATLAS
+version, the Automation Exporter / Editor keeps single automations with
+root-level trigger or action fragments as one entry instead of splitting them
+into duplicate conflict rows.
 
 ## Install in ATLAS
 
@@ -41,6 +41,8 @@ ATLAS also accepts the raw repository JSON directly:
 - list detected automations with alias, id, entities and services
 - detect Home Assistant services from classic `service:` entries and modern
   `action: domain.service` entries
+- keep single automations with root-level trigger or action fragments as one
+  detected automation
 - show analysis hints for missing or duplicate ids/aliases, missing triggers or
   actions and disabled automations
 - show selected automation YAML with Studio-like highlighting

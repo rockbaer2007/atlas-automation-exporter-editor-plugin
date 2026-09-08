@@ -10,6 +10,8 @@ by the existing Windows Automation Exporter.
 - upload external `.yaml` or `.yml` files for local analysis
 - list detected automations with alias, id, entities and classic `service:` or
   modern `action: domain.service` calls
+- keep single automations with root-level trigger or action fragments as one
+  detected automation
 - show analysis warnings for missing or duplicate ids/aliases, missing triggers
   or actions and disabled automations
 - pre-mark duplicate ids and aliases directly in the automation list as
