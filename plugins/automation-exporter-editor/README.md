@@ -14,6 +14,8 @@ by the existing Windows Automation Exporter.
   or actions and disabled automations
 - pre-mark duplicate ids and aliases directly in the automation list as
   conflicts
+- keep duplicate ids and aliases as conflicts instead of repeating them as
+  general hints
 - show the selected automation YAML with Studio-like highlighting
 - keep the automation list internally scrollable with roughly 15 visible rows
 - group and filter the automation list by domain, area or device
