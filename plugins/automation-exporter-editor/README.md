@@ -16,6 +16,7 @@ by the existing Windows Automation Exporter.
   conflicts
 - show the selected automation YAML with Studio-like highlighting
 - keep the automation list internally scrollable with roughly 15 visible rows
+- group and filter the automation list by domain, area or device
 - configure a target export folder label
 - create a safety backup before reading the real `/config/automations.yaml`
 - store backups in timestamped folders while keeping the filename
