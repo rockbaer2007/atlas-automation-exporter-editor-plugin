@@ -12,6 +12,8 @@ by the existing Windows Automation Exporter.
   modern `action: domain.service` calls
 - show analysis warnings for missing or duplicate ids/aliases, missing triggers
   or actions and disabled automations
+- pre-mark duplicate ids and aliases directly in the automation list as
+  conflicts
 - show the selected automation YAML with Studio-like highlighting
 - keep the automation list internally scrollable with roughly 15 visible rows
 - configure a target export folder label
