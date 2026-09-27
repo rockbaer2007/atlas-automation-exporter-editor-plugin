@@ -12,13 +12,12 @@ architecture.
 <p>
   <strong>ATLAS Automation Exporter / Editor</strong><br>
   Plugin ID: <code>atlas.plugin.automation-exporter-editor</code><br>
-  Version: <code>0.1.24</code>
+  Version: <code>0.1.25</code>
 </p>
 
-Current ATLAS/Home Assistant App/Add-on target: `0.1.263`. In that ATLAS
-version, the Automation Exporter / Editor keeps single automations with
-root-level trigger or action fragments as one entry instead of splitting them
-into duplicate conflict rows.
+Current ATLAS/Home Assistant App/Add-on target: `0.1.264`. The plugin provides
+German, English and French interfaces and follows the saved ATLAS language
+preference when opened. Direct URL language choices take precedence.
 
 ## Install in ATLAS
 
