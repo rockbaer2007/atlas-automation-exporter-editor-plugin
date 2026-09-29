@@ -1,5 +1,7 @@
 # ATLAS Automation Exporter / Editor
 
+Return to the ATLAS Plugin Hub using the **Plugin Hub** button in the upper-right header, beside the language buttons.
+
 ATLAS Automation Exporter / Editor is an ATLAS plugin for Home Assistant
 automation workflows. It starts as a safe analysis and export surface inspired
 by the existing Windows Automation Exporter.
@@ -35,4 +37,5 @@ by the existing Windows Automation Exporter.
 
 The plugin does not write back into Home Assistant system files. Editing and
 manual restore workflows should continue through File Studio and Home
-Assistant's own YAML tools.
+Assistant's own YAML tools. Use **Plugin Hub** in the header to return to the
+ATLAS Plugin Hub.

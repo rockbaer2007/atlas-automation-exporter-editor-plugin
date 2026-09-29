@@ -22,7 +22,7 @@
         "en": "ATLAS Automation Exporter / Editor",
         "fr": "ATLAS Exportateur / Éditeur d’automatisations"
       },
-      "version": "0.1.26",
+      "version": "0.1.27",
       "description": "Analyze Home Assistant automations, export selected entries and continue editing them through File Studio.",
       "descriptionI18n": {
         "de": "Home-Assistant-Automationen analysieren, ausgewählte Einträge exportieren und über File Studio weiter bearbeiten.",
@@ -34,7 +34,7 @@
       "icon": "./plugins/automation-exporter-editor/icon.svg",
       "preview": "./plugins/automation-exporter-editor/preview.svg",
       "entry": "/plugin-assets/automation-exporter-editor/index.html",
-      "package": "./plugins/automation-exporter-editor/atlas-plugin-automation-exporter-editor-0.1.26.atlas-plugin.json",
+      "package": "./plugins/automation-exporter-editor/atlas-plugin-automation-exporter-editor-0.1.27.atlas-plugin.json",
       "manifest": "./plugins/automation-exporter-editor/atlas-plugin.json",
       "capabilities": [
         "homeassistant.automation-analysis",
